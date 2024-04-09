@@ -26,7 +26,7 @@ class TestListGenre:
             genre_repository=mock_genre_repository,
         )
 
-        output = use_case.execute()
+        output = use_case.execute(ListGenre.Input())
 
         assert len(output.data) == 1
         assert output == ListGenre.Output(
@@ -35,7 +35,7 @@ class TestListGenre:
                     id=genre.id,
                     name="Action",
                     is_active=True,
-                    category_ids={},
+                    categories={},
                 )
             ]
         )
@@ -56,7 +56,7 @@ class TestListGenre:
             genre_repository=mock_genre_repository,
         )
 
-        output = use_case.execute()
+        output = use_case.execute(ListGenre.Input())
 
         assert len(output.data) == 1
         assert output == ListGenre.Output(
@@ -65,7 +65,7 @@ class TestListGenre:
                     id=genre.id,
                     name="Action",
                     is_active=True,
-                    category_ids={category_id},
+                    categories={category_id},
                 )
             ]
         )

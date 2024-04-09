@@ -2,8 +2,10 @@ from unittest.mock import MagicMock
 import uuid
 
 import pytest
+from src.core.category.domain.category import Category
+from src.core.category.domain.category_repository import CategoryRepository
 from src.core.genre.domain.genre_repository import GenreRepository
-from src.core.genre.application.use_cases.update_genre import UpdateGenre, UpdateGenreRequest
+from src.core.genre.application.use_cases.update_genre import UpdateGenre
 from src.core.genre.domain.genre import Genre
 
 
@@ -18,12 +20,19 @@ class TestUpdateGenre:
 
         mock_repository = MagicMock(GenreRepository)
         mock_repository.get_by_id.return_value = genre
+
+        mock_category_repository = MagicMock(CategoryRepository)
         
-        use_case = UpdateGenre(mock_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(
+            genre_repository=mock_repository, 
+            category_repository=mock_category_repository
+        )
+
+        request = UpdateGenre.Input(
             id=genre.id,
             name='Filme 2',
-            categories={}
+            categories=set(),
+            is_active=True
         )
 
         use_case.execute(request)
@@ -40,11 +49,15 @@ class TestUpdateGenre:
 
         mock_repository = MagicMock(GenreRepository)
         mock_repository.get_by_id.return_value = genre
+
+        mock_category_repository = MagicMock(CategoryRepository)
         
-        use_case = UpdateGenre(mock_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(genre_repository=mock_repository, category_repository=mock_category_repository)
+        request = UpdateGenre.Input(
             id=genre.id,
-            is_active=True
+            is_active=True,
+            categories=set(),
+            name='Filme' 
         )
 
         use_case.execute(request)
@@ -61,11 +74,15 @@ class TestUpdateGenre:
 
         mock_repository = MagicMock(GenreRepository)
         mock_repository.get_by_id.return_value = genre
+
+        mock_category_repository = MagicMock(CategoryRepository)
         
-        use_case = UpdateGenre(mock_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(genre_repository=mock_repository, category_repository=mock_category_repository)
+        request = UpdateGenre.Input(
             id=genre.id,
-            is_active=False
+            is_active=False,
+            categories=set(),
+            name='Filme'
         )
 
         use_case.execute(request)
@@ -84,13 +101,31 @@ class TestUpdateGenre:
         mock_repository = MagicMock(GenreRepository)
         mock_repository.get_by_id.return_value = genre
 
+        mock_category_repository = MagicMock(CategoryRepository)
 
-        category_ids = {uuid.uuid4(), uuid.uuid4()}
+        movie_category = Category(
+            name="Movie",
+            id=uuid.uuid4()
+        )
+
+        documentary_category = Category(
+            name="Documentary",
+            id=uuid.uuid4()
+        )
+
+        category_ids = {documentary_category.id, movie_category.id}
+
+
+        mock_category_repository.list.return_value = [movie_category, documentary_category]
+
+
         
-        use_case = UpdateGenre(mock_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(genre_repository=mock_repository, category_repository=mock_category_repository)
+        request = UpdateGenre.Input(
             id=genre.id,
-            categories=category_ids
+            categories=category_ids,
+            is_active=True,
+            name='Filme'
         )
 
         use_case.execute(request)
@@ -109,11 +144,14 @@ class TestUpdateGenre:
         mock_repository = MagicMock(GenreRepository)
         mock_repository.get_by_id.return_value = None
 
+        mock_category_repository = MagicMock(CategoryRepository)
         
-        use_case = UpdateGenre(mock_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(genre_repository=mock_repository, category_repository=mock_category_repository)
+        request = UpdateGenre.Input(
             id=uuid.uuid4(),
             name='Filme 2',
+            categories=set(),
+            is_active=True
         )
 
         with pytest.raises(Exception) as exec_info:

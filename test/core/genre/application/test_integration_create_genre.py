@@ -40,7 +40,7 @@ class TestCreateGenre:
             category_repository=category_repository,
         )
 
-        input = CreateGenre.Input(name="Action", category_ids={movie_category.id, documentary_category.id})
+        input = CreateGenre.Input(name="Action", categories={movie_category.id, documentary_category.id})
 
         output = use_case.execute(input)
 
@@ -58,7 +58,7 @@ class TestCreateGenre:
         use_case = CreateGenre(genre_repository=genre_repository, category_repository=category_repository)
 
         category_id = uuid.uuid4()
-        input = CreateGenre.Input(name="Action", category_ids={category_id})
+        input = CreateGenre.Input(name="Action", categories={category_id})
 
         with pytest.raises(ReleatedCategoryNotFound):
             use_case.execute(input)

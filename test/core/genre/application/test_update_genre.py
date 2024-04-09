@@ -1,12 +1,10 @@
-from unittest.mock import MagicMock
 import uuid
 
 import pytest
 from src.core.category.domain.category import Category
 from src.core.category.domain.category_repository import CategoryRepository
 from src.core.category.infra.memory_category_repository import MemoryCategoryRepository
-from src.core.genre.domain.genre_repository import GenreRepository
-from src.core.genre.application.use_cases.update_genre import UpdateGenre, UpdateGenreRequest
+from src.core.genre.application.use_cases.update_genre import UpdateGenre
 from src.core.genre.domain.genre import Genre
 from src.core.genre.infra.memory_genre_repository import MemoryGenreRepository
 
@@ -31,7 +29,7 @@ def category_repository(movie_category, documentary_category) -> CategoryReposit
 
 class TestUpdateGenre:
 
-    def test_update_genre_name(self, genre_repository):
+    def test_update_genre_name(self, genre_repository, category_repository):
         genre = Genre(
             name='Filme',
             is_active=False,
@@ -41,13 +39,15 @@ class TestUpdateGenre:
         genre_repository.create(genre)
         
         use_case = UpdateGenre(
-            repository=genre_repository
+            genre_repository=genre_repository,
+            category_repository=category_repository,
         )
 
-        request = UpdateGenreRequest(
+        request = UpdateGenre.Input(
             id=genre.id,
             name='Filme 2',
-            categories={}
+            categories=set(),
+            is_active=True
         )
 
         use_case.execute(request)
@@ -56,22 +56,32 @@ class TestUpdateGenre:
 
         assert genre_model.name == 'Filme 2'
 
-    def test_can_update_category_to_genre(self, genre_repository):
+    def test_can_update_category_to_genre(self, 
+                                          genre_repository, category_repository):
+        
+        documentary_category = Category(name="Documentary")
+        movie_category = Category(name="Movie")
+
+        category_repository.create(documentary_category)
+        category_repository.create(movie_category)
+        
         genre = Genre(
             name='Filme',
-            categories={uuid.uuid4()}
+            categories={documentary_category.id}
         )
 
         genre_repository.create(genre)
-
-
-        category_ids = {uuid.uuid4(), uuid.uuid4()}
+        category_ids = {documentary_category.id, movie_category.id}
 
         
-        use_case = UpdateGenre(repository=genre_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(genre_repository=genre_repository, 
+                               category_repository=category_repository)
+        
+        request = UpdateGenre.Input(
             id=genre.id,
-            categories=category_ids
+            categories=category_ids,
+            is_active=True,
+            name='Filme',
         )
 
         use_case.execute(request)
@@ -81,12 +91,18 @@ class TestUpdateGenre:
         assert genre_model.categories == category_ids
 
 
-    def test_when_genre_not_found(self, genre_repository):
+    def test_when_genre_not_found(self, genre_repository, category_repository):
         
-        use_case = UpdateGenre(repository=genre_repository)
-        request = UpdateGenreRequest(
+        use_case = UpdateGenre(
+            genre_repository=genre_repository,
+            category_repository=category_repository
+        )
+        
+        request = UpdateGenre.Input(
             id=uuid.uuid4(),
             name='Filme',
+            categories=set(),
+            is_active=True 
         )
 
         with pytest.raises(Exception) as exec_info:
